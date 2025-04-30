@@ -13,7 +13,7 @@ from torchvision import datasets, transforms
 import torch
 import os
 
-from utils.sampling import mnist_iid, mnist_noniid, cifar_iid,cifar_noniid
+from utils.sampling import mnist_iid, mnist_noniid, mnist_mixed_noniid, cifar_iid,cifar_noniid
 from utils.options import args_parser
 from models.Update import LocalUpdateDP, LocalUpdateDPSerial
 from models.Nets import MLP, CNNMnist, CNNCifar, CNNFemnist, CharLSTM
@@ -46,7 +46,8 @@ if __name__ == '__main__':
         if args.iid:
             dict_users = mnist_iid(dataset_train, args.num_users)
         else:
-            dict_users = mnist_noniid(dataset_train, args.num_users)
+            # dict_users = mnist_noniid(dataset_train, args.num_users)
+            dict_users = mnist_mixed_noniid(dataset_train, args.num_users, frac_iid=0.3, shards_per_client=2)
     elif args.dataset == 'cifar':
         #trans_cifar = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
         args.num_channels = 3
@@ -162,7 +163,7 @@ if __name__ == '__main__':
 
         acc_test.append(acc_t.item())
 
-    rootpath = './log'
+    rootpath = './mylog'
     if not os.path.exists(rootpath):
         os.makedirs(rootpath)
     accfile = open(rootpath + '/accfile_fed_{}_{}_{}_iid{}_dp_{}_epsilon_{}.dat'.
