@@ -43,11 +43,15 @@ if __name__ == '__main__':
         dataset_test = datasets.MNIST('./data/mnist/', train=False, download=True, transform=trans_mnist)
         args.num_channels = 1
         # sample users
-        if args.iid:
+        if args.data_split == 'iid':
             dict_users = mnist_iid(dataset_train, args.num_users)
-        else:
-            # dict_users = mnist_noniid(dataset_train, args.num_users)
+        elif args.data_split == 'noniid':
+            dict_users = mnist_noniid(dataset_train, args.num_users)
+        elif args.data_split == 'mixednoniid':
             dict_users = mnist_mixed_noniid(dataset_train, args.num_users, frac_iid=0.3, shards_per_client=2)
+        else:
+            raise ValueError(f"Unknown data_split option: {args.data_split}")
+
     elif args.dataset == 'cifar':
         #trans_cifar = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
         args.num_channels = 3
@@ -136,7 +140,7 @@ if __name__ == '__main__':
     else:
         clients = [LocalUpdateDP(args=args, dataset=dataset_train, idxs=dict_users[i]) for i in range(args.num_users)]
     m, loop_index = max(int(args.frac * args.num_users), 1), int(1 / args.frac)
-    for iter in range(args.epochs):
+    for iter in range(100):
         t_start = time.time()
         w_locals, loss_locals, weight_locols = [], [], []
         # round-robin selection
@@ -166,9 +170,10 @@ if __name__ == '__main__':
     rootpath = './mylog'
     if not os.path.exists(rootpath):
         os.makedirs(rootpath)
-    accfile = open(rootpath + '/accfile_fed_{}_{}_{}_iid{}_dp_{}_epsilon_{}.dat'.
-                   format(args.dataset, args.model, args.epochs, args.iid,
-                          args.dp_mechanism, args.dp_epsilon), "w")
+    accfile = open(rootpath + '/accfile_fed_{}_{}_{}_split_{}_dp_{}_epsilon_{}.dat'.
+               format(args.dataset, args.model, args.epochs, args.data_split,
+                      args.dp_mechanism, args.dp_epsilon), "w")
+
 
     for ac in acc_test:
         sac = str(ac)
@@ -180,8 +185,9 @@ if __name__ == '__main__':
     plt.figure()
     plt.plot(range(len(acc_test)), acc_test)
     plt.ylabel('test accuracy')
-    plt.savefig(rootpath + '/fed_{}_{}_{}_C{}_iid{}_dp_{}_epsilon_{}_acc.png'.format(
-        args.dataset, args.model, args.epochs, args.frac, args.iid, args.dp_mechanism, args.dp_epsilon))
+    plt.savefig(rootpath + '/fed_{}_{}_{}_C{}_split_{}_dp_{}_epsilon_{}_acc.png'.format(
+        args.dataset, args.model, args.epochs, args.frac, args.data_split, args.dp_mechanism, args.dp_epsilon))
+
 
 
 
