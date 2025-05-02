@@ -140,7 +140,7 @@ if __name__ == '__main__':
     else:
         clients = [LocalUpdateDP(args=args, dataset=dataset_train, idxs=dict_users[i]) for i in range(args.num_users)]
     m, loop_index = max(int(args.frac * args.num_users), 1), int(1 / args.frac)
-    for iter in range(100):
+    for iter in range(args.epochs):
         t_start = time.time()
         w_locals, loss_locals, weight_locols = [], [], []
         # round-robin selection
