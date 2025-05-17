@@ -135,6 +135,7 @@ if __name__ == '__main__':
 
     # training
     acc_test = []
+    best_acc = 0
     if args.serial:
         clients = [LocalUpdateDPSerial(args=args, dataset=dataset_train, idxs=dict_users[i]) for i in range(args.num_users)]
     else:
@@ -166,6 +167,16 @@ if __name__ == '__main__':
         print("Round {:3d},Testing accuracy: {:.2f},Time:  {:.2f}s".format(iter, acc_t, t_end - t_start))
 
         acc_test.append(acc_t.item())
+        
+        # 保存最佳模型
+        if acc_t > best_acc:
+            best_acc = acc_t
+            torch.save({
+                'model_state_dict': net_glob.state_dict(),
+                'accuracy': acc_t,
+                'epoch': iter
+            }, './mylog/best_model.pth')
+            print(f"保存最佳模型，准确率: {acc_t:.2f}%")
 
     rootpath = './mylog'
     if not os.path.exists(rootpath):
